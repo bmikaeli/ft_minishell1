@@ -10,7 +10,7 @@
 #                                                                              #
 # **************************************************************************** #
 
-NAME =	ft_sh1
+NAME =	ft_minishell1
 GCCW =	cc -Wall -Wextra -Werror
 
 SRC =	main.c \
