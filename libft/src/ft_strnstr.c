@@ -20,7 +20,9 @@ char			*ft_strnstr(const char *s1, const char *s2, size_t n)
 	while (ft_strncmp(s1, s2, ft_strlen(s2)) != 0 && n-- >= ft_strlen(s2))
 	{
 		if (*s1 == '\0')
+		{
 			break ;
+		}
 		s1++;
 	}
 	if (n < ft_strlen(s2) || ft_strlen(s1) < ft_strlen(s2))
