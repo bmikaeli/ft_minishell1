@@ -12,65 +12,81 @@
 
 #include "ft_sh1.h"
 
-void print_env(tsh1 *env) {
-    int i = 0;
-    while (env->env[i]) {
-        if (env->env[i][0] != '\0') {
-            if(ft_strchr(env->env[i], '='))
-            {
-                ft_putendl(env->env[i]);
-            }
-        }
-        i++;
-    }
+void	print_env(t_sh1 *env)
+{
+	int	i;
+
+	i = 0;
+	while (env->env[i])
+	{
+		if (env->env[i][0] != '\0')
+		{
+			if (ft_strchr(env->env[i], '='))
+				ft_putendl(env->env[i]);
+		}
+		i++;
+	}
 }
 
-void getPath(tsh1 *env) {
-    int i = 0;
-    while (env->env[i]) {
-        if (!ft_strncmp(env->env[i], "PATH=", 5)) {
-            env->path = ft_strsplit(env->env[i], ':');
-        }
-        i++;
-    }
+void	getpath(t_sh1 *env)
+{
+	int	i;
+
+	i = 0;
+	while (env->env[i])
+	{
+		if (!ft_strncmp(env->env[i], "PATH=", 5))
+			env->path = ft_strsplit(env->env[i], ':');
+		i++;
+	}
 }
 
-int unsetEnv(char *toDelete, tsh1 *all) {
-    int i = 0;
-    int found = 0;
+int		ft_unsetenv(char *todelete, t_sh1 *all)
+{
+	int	i;
+	int	found;
 
-    while (all->env[i]) {
-        if (!found && !ft_strncmp(all->env[i], ft_strjoin(toDelete, "="), ft_strlen(toDelete + 1))) {
-            all->env[i] = "\0";
-            found = i;
-        }
-        i++;
-    }
-    if (found) {
-        return 1;
-    }
-    return 0;
+	i = 0;
+	found = 0;
+	while (all->env[i])
+	{
+		if (!found && !ft_strncmp(all->env[i], ft_strjoin(todelete, "="),
+			ft_strlen(todelete + 1)))
+		{
+			all->env[i] = "\0";
+			found = i;
+		}
+		i++;
+	}
+	if (found)
+		return (1);
+	return (0);
 }
 
-int setEnv(char *toAdd, tsh1 *all) {
-    char **split = ft_strsplit(toAdd, ' ');
-    if(!ft_strcmp(split[1], "PATH"))
-    {
-        getPath(all);
-    }
-    if (split[1] && split[2]) {
-        int i = 0;
-        while (all->env[i] && all->env[i][0] != '\0') {
-            char **split2 = ft_strsplit(all->env[i], '=');
-            if (!ft_strcmp(split2[0], split[1]))
-                break;
-            i++;
-        }
-        all->env[i] = malloc(sizeof(char *) * ft_strlen(ft_strjoin(split[1], split[2])) + 1);
-        all->env[i] = ft_strjoin(split[1], ft_strjoin("=", split[2]));
-    }
-    else {
-        return -1;
-    }
-    return 1;
+int		ft_setenv(char *toadd, t_sh1 *all)
+{
+	char	**split;
+	char	**split2;
+	int		i;
+
+	split = ft_strsplit(toadd, ' ');
+	if (!ft_strcmp(split[1], "PATH"))
+		getpath(all);
+	if (split[1] && split[2])
+	{
+		i = 0;
+		while (all->env[i] && all->env[i][0] != '\0')
+		{
+			split2 = ft_strsplit(all->env[i], '=');
+			if (!ft_strcmp(split2[0], split[1]))
+				break ;
+			i++;
+		}
+		all->env[i] = malloc(sizeof(char *) *
+			ft_strlen(ft_strjoin(split[1], split[2])) + 1);
+		all->env[i] = ft_strjoin(split[1], ft_strjoin("=", split[2]));
+	}
+	else
+		return (-1);
+	return (1);
 }

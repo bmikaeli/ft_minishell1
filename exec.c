@@ -12,93 +12,110 @@
 
 #include "ft_sh1.h"
 
-void do_cd(char *line, tsh1 *all) {
-    char **split = ft_strsplit(line, ' ');
-    DIR *dirp;
-    if (split[2]) {
-        ft_putendl("cd : too many arguments");
-    }
-    if (split[1]) {
-        dirp = opendir(split[1]);
-        if (dirp != NULL) {
-            int i = 0;
-            while (all->env[i]) {
-                if (!ft_strncmp("PWD=", all->env[i], 4)) {
-                    chdir(split[1]);
-                    char *newpath = ft_strjoin("PWD=", split[1]);
-                    all->env[i] = newpath;
-                    break;
-                }
-                i++;
-            }
-        }
-        else {
-            ft_putendl(ft_strjoin("cd: no such file or directory: ", split[1]));
-        }
-    }
+int					isexistinpath(char *bin, t_sh1 *all)
+{
+	int				i;
+	int				len;
+	DIR				*dirp;
+	struct dirent	*dp;
+
+	i = 0;
+	while (all->path[i])
+	{
+		dirp = opendir(all->path[i]);
+		if (dirp == NULL)
+			return (-1);
+		len = ft_strlen(bin);
+		while ((dp = readdir(dirp)) != NULL)
+		{
+			if (dp->d_namlen == len && strcmp(dp->d_name, bin) == 0)
+			{
+				closedir(dirp);
+				return (i);
+			}
+		}
+		closedir(dirp);
+		i++;
+	}
+	return (-1);
 }
 
+int					isexist(char *bin, t_sh1 *all)
+{
+	int				i;
+	DIR				*dirp;
+	int				j;
+	struct dirent	*dp;
 
-int isExist(char *binarie, tsh1 *all) {
-    int i = 0;
-    int len;
-    DIR *dirp;
-    int j = 0;
-    struct dirent *dp;
-
-    while (binarie[i] != '\0') {
-        if (binarie[i] == '/')
-            j = i;
-        i++;
-    }
-    dirp = opendir(ft_strsub(binarie, 0, j + 1));
-
-    if (dirp != NULL) {
-        len = ft_strlen(binarie);
-        while ((dp = readdir(dirp)) != NULL) {
-            if (strcmp(dp->d_name, ft_strsub(binarie, j + 1, ft_strlen(binarie + 1))) == 0) {
-                closedir(dirp);
-                return (42);
-            }
-        }
-    }
-    i = 0;
-
-    while (all->path[i]) {
-        dirp = opendir(all->path[i]);
-        if (dirp == NULL)
-            return (-1);
-        len = ft_strlen(binarie);
-        while ((dp = readdir(dirp)) != NULL) {
-            if (dp->d_namlen == len && strcmp(dp->d_name, binarie) == 0) {
-                closedir(dirp);
-                return (i);
-            }
-        }
-        closedir(dirp);
-        i++;
-    }
-    return (-1);
+	j = 0;
+	i = 0;
+	while (bin[i] != '\0')
+	{
+		if (bin[i] == '/')
+			j = i;
+		i++;
+	}
+	dirp = opendir(ft_strsub(bin, 0, j + 1));
+	if (dirp != NULL)
+	{
+		while ((dp = readdir(dirp)) != NULL)
+		{
+			if (!strcmp(dp->d_name, ft_strsub(bin, j + 1, ft_strlen(bin + 1))))
+			{
+				return (42);
+			}
+		}
+	}
+	return (isexistinpath(bin, all));
 }
 
-void exec(char **split, tsh1 *all, int pathnb) {
-    int child_status;
-    pid_t pid;
+void				exec(char **split, t_sh1 *all, int pathnb)
+{
+	int				child_status;
+	pid_t			pid;
 
-    pid = fork();
+	pid = fork();
+	if (pid == 0)
+	{
+		if (pathnb == 42)
+			execve(split[0], split, all->env);
+		else
+			execve(ft_strjoin(all->path[pathnb],
+				ft_strjoin("/", split[0])), split, all->env);
+		ft_putendl("error execve");
+		exit(0);
+	}
+	else
+		while (!waitpid(pid, &child_status, WNOHANG))
+		{
+		}
+}
 
-    if (pid == 0) {
-        if (pathnb == 42) {
-            execve(split[0], split, all->env);
-        }
-        else {
-            execve(ft_strjoin(all->path[pathnb], ft_strjoin("/", split[0])), split, all->env);
-        }
-        ft_putendl("error execve");
-        exit(0);
-    }
-    else {
-        while (waitpid(pid, &child_status, WNOHANG) == 0) {
-        }
-    }
+void				do_cd(char *line, t_sh1 *all)
+{
+	char			**split;
+	DIR				*dirp;
+	int				i;
+	char			*newpath;
+
+	split = ft_strsplit(line, ' ');
+	if (split[1])
+	{
+		dirp = opendir(split[1]);
+		if (dirp != NULL)
+		{
+			i = 0;
+			while (all->env[++i])
+			{
+				if (!ft_strncmp("PWD=", all->env[i], 4) && chdir(split[1]))
+				{
+					newpath = ft_strjoin("PWD=", split[1]);
+					all->env[i] = newpath;
+					break ;
+				}
+			}
+		}
+		else
+			ft_putendl(ft_strjoin("cd: no such file or directory: ", split[1]));
+	}
 }
